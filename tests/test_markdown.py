@@ -84,3 +84,37 @@ def test_unsupported_block_produces_a_warning_and_no_output():
 
     assert result.markdown == ""
     assert result.warnings == ["unsupported block type 'unsupported_widget' (id xyz)"]
+
+
+def test_toggleable_heading_with_children_renders_heading_and_children_flat():
+    blocks = [
+        {
+            "type": "heading_2",
+            "heading_2": {"rich_text": [text_fragment("Interview questions")], "is_toggleable": True},
+            "children": [
+                {"type": "paragraph", "paragraph": {"rich_text": [text_fragment("What is OOP?")]}}
+            ],
+        }
+    ]
+
+    result = blocks_to_markdown(blocks)
+
+    assert result.markdown == '## Interview questions {toggle="true"}\n\nWhat is OOP?'
+    assert result.warnings == []
+
+
+def test_unsupported_block_with_children_renders_children_and_warning():
+    blocks = [
+        {
+            "type": "unsupported_widget",
+            "id": "xyz",
+            "children": [
+                {"type": "paragraph", "paragraph": {"rich_text": [text_fragment("Hidden content")]}}
+            ],
+        }
+    ]
+
+    result = blocks_to_markdown(blocks)
+
+    assert result.markdown == "Hidden content"
+    assert result.warnings == ["unsupported block type 'unsupported_widget' (id xyz)"]

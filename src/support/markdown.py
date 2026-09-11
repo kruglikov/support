@@ -47,48 +47,52 @@ def _render_block(block, warnings):
         level = HEADING_LEVELS[block_type]
         title = rich_text_to_markdown(payload.get("rich_text", []))
         toggle_suffix = ' {toggle="true"}' if payload.get("is_toggleable") else ""
-        return f"{'#' * level} {title}{toggle_suffix}"
-
-    if block_type == "paragraph":
-        return rich_text_to_markdown(payload.get("rich_text", []))
-
-    if block_type == "bulleted_list_item":
-        return f"- {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "numbered_list_item":
-        return f"1. {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "to_do":
+        rendered = f"{'#' * level} {title}{toggle_suffix}"
+    elif block_type == "paragraph":
+        rendered = rich_text_to_markdown(payload.get("rich_text", []))
+    elif block_type == "bulleted_list_item":
+        rendered = f"- {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "numbered_list_item":
+        rendered = f"1. {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "to_do":
         checkbox = "x" if payload.get("checked") else " "
-        return f"- [{checkbox}] {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "quote":
-        return f"> {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "callout":
-        return f"> {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "toggle":
-        return f"- {rich_text_to_markdown(payload.get('rich_text', []))}"
-
-    if block_type == "code":
+        rendered = f"- [{checkbox}] {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "quote":
+        rendered = f"> {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "callout":
+        rendered = f"> {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "toggle":
+        rendered = f"- {rich_text_to_markdown(payload.get('rich_text', []))}"
+    elif block_type == "code":
         language = payload.get("language", "")
         body = rich_text_to_markdown(payload.get("rich_text", []))
-        return f"```{language}\n{body}\n```"
+        rendered = f"```{language}\n{body}\n```"
+    elif block_type == "divider":
+        rendered = "---"
+    elif block_type == "child_page":
+        rendered = f"[{payload.get('title', 'Untitled')}](notion://{block.get('id', '')})"
+    elif block_type == "child_database":
+        rendered = f"[{payload.get('title', 'Database')}](notion://{block.get('id', '')})"
+    else:
+        warnings.append(
+            f"unsupported block type '{block_type}' (id {block.get('id', 'unknown')})"
+        )
+        rendered = ""
 
-    if block_type == "divider":
-        return "---"
+    children = block.get("children", [])
+    if children:
+        children_rendered = []
+        for child in children:
+            child_output = _render_block(child, warnings)
+            if child_output:
+                children_rendered.append(child_output)
+        if children_rendered:
+            if rendered:
+                rendered = rendered + "\n\n" + "\n\n".join(children_rendered)
+            else:
+                rendered = "\n\n".join(children_rendered)
 
-    if block_type == "child_page":
-        return f"[{payload.get('title', 'Untitled')}](notion://{block.get('id', '')})"
-
-    if block_type == "child_database":
-        return f"[{payload.get('title', 'Database')}](notion://{block.get('id', '')})"
-
-    warnings.append(
-        f"unsupported block type '{block_type}' (id {block.get('id', 'unknown')})"
-    )
-    return ""
+    return rendered
 
 
 def blocks_to_markdown(blocks):

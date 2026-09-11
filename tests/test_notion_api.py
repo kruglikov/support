@@ -103,3 +103,43 @@ def test_extract_title_falls_back_when_the_title_is_empty():
     page = {"properties": {"title": {"title": []}}}
 
     assert extract_title(page) == "Untitled"
+
+
+def test_fetch_all_blocks_recursively_fetches_children():
+    class FakeBlocksChildrenWithBlockIdSupport:
+        def __init__(self):
+            self.requested_cursors = []
+
+        def list(self, block_id, start_cursor=None, page_size=100):
+            self.requested_cursors.append((block_id, start_cursor))
+            if block_id == "page-1" and start_cursor is None:
+                return {
+                    "results": [
+                        {"id": "b1", "has_children": True},
+                        {"id": "b2", "has_children": False},
+                    ],
+                    "has_more": False,
+                    "next_cursor": None,
+                }
+            elif block_id == "b1" and start_cursor is None:
+                return {
+                    "results": [
+                        {"id": "child1"},
+                        {"id": "child2"},
+                    ],
+                    "has_more": False,
+                    "next_cursor": None,
+                }
+            else:
+                return {"results": [], "has_more": False, "next_cursor": None}
+
+    blocks_children = FakeBlocksChildrenWithBlockIdSupport()
+    gateway = NotionGateway(FakeClient(blocks_children), min_seconds_between_calls=0)
+
+    blocks = gateway.fetch_all_blocks("page-1")
+
+    assert len(blocks) == 2
+    assert blocks[0]["id"] == "b1"
+    assert blocks[0]["children"] == [{"id": "child1"}, {"id": "child2"}]
+    assert blocks[1]["id"] == "b2"
+    assert "children" not in blocks[1]

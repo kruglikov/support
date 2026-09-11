@@ -61,6 +61,10 @@ class NotionGateway:
                 break
             start_cursor = response["next_cursor"]
 
+        for block in blocks:
+            if block.get("has_children"):
+                block["children"] = self.fetch_all_blocks(block["id"])
+
         return blocks
 
     def walk_page_tree(self, root_page_id):
