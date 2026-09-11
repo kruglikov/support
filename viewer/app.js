@@ -43,15 +43,19 @@ async function load() {
     .filter((node) => !childIds.has(node.id))
     .map((node) => node.id);
 
-  treeElement.replaceChildren(renderBranch(rootIds, true));
+  treeElement.replaceChildren(renderBranch(rootIds, true, new Set()));
 }
 
-function renderBranch(nodeIds, isExpanded) {
+function renderBranch(nodeIds, isExpanded, visitedIds) {
   const container = document.createElement("div");
   container.className = "children";
   container.hidden = !isExpanded;
 
   for (const nodeId of nodeIds) {
+    if (visitedIds.has(nodeId)) {
+      continue;
+    }
+
     const node = state.nodesById.get(nodeId);
     if (!node) {
       continue;
@@ -65,7 +69,9 @@ function renderBranch(nodeIds, isExpanded) {
       `<span class="caret">${childIds.length ? "\u203a" : ""}</span>` +
       escapeHtml(node.title);
 
-    const childContainer = childIds.length ? renderBranch(childIds, false) : null;
+    const childContainer = childIds.length
+      ? renderBranch(childIds, false, new Set(visitedIds).add(nodeId))
+      : null;
 
     row.addEventListener("click", () => {
       if (childContainer) {
@@ -92,6 +98,7 @@ function select(nodeId) {
   }
   const activeRow = document.querySelector(`.row[data-node-id="${cssEscape(nodeId)}"]`);
   if (activeRow) {
+    expandAncestors(activeRow);
     activeRow.classList.add("selected");
     activeRow.scrollIntoView({ block: "nearest" });
   }
@@ -117,6 +124,24 @@ function select(nodeId) {
   }
 
   contentElement.append(renderRelated(nodeId));
+}
+
+function expandAncestors(row) {
+  let container = row.parentElement;
+
+  while (container && container.id !== "tree") {
+    if (container.classList.contains("children") && container.hidden) {
+      container.hidden = false;
+      const ancestorRow = container.previousElementSibling;
+      if (ancestorRow) {
+        const caret = ancestorRow.querySelector(".caret");
+        if (caret) {
+          caret.textContent = "⌄";
+        }
+      }
+    }
+    container = container.parentElement;
+  }
 }
 
 function renderBody(node) {

@@ -115,3 +115,9 @@ def main(argv=None):
     except ConfigError as error:
         print(f"error: {error}")
         return 1
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
