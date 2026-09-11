@@ -1,0 +1,87 @@
+import re
+from dataclasses import dataclass
+
+HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
+FENCE_PATTERN = re.compile(r"^\s*(?:```|~~~)")
+TOGGLE_PATTERN = re.compile(r'\{toggle="true"\}')
+PRIORITY_PATTERN = re.compile(r'<span[^>]*color="red"[^>]*>')
+MARKUP_PATTERN = re.compile(r'<[^>]+>|\*\*|__|\{toggle="[^"]*"\}')
+
+
+@dataclass(frozen=True)
+class Heading:
+    level: int
+    title: str
+    is_toggle: bool
+    is_priority: bool
+    line_index: int
+
+
+@dataclass(frozen=True)
+class Section:
+    heading: Heading
+    parent_index: int | None
+    content: str
+
+
+def clean_title(raw_title):
+    cleaned_title = MARKUP_PATTERN.sub("", raw_title).strip()
+    return cleaned_title
+
+
+def parse_headings(markdown_text):
+    """Return every real Markdown heading, ignoring heading-like lines in code fences."""
+    lines = markdown_text.split("\n")
+    headings = []
+    is_inside_fence = False
+
+    for line_index, line in enumerate(lines):
+        if FENCE_PATTERN.match(line):
+            is_inside_fence = not is_inside_fence
+            continue
+        if is_inside_fence:
+            continue
+
+        heading_match = HEADING_PATTERN.match(line)
+        if heading_match is None:
+            continue
+
+        raw_title = heading_match.group(2)
+        heading = Heading(
+            level=len(heading_match.group(1)),
+            title=clean_title(raw_title),
+            is_toggle=bool(TOGGLE_PATTERN.search(raw_title)),
+            is_priority=bool(PRIORITY_PATTERN.search(raw_title)),
+            line_index=line_index,
+        )
+        headings.append(heading)
+
+    return headings
+
+
+def build_sections(markdown_text):
+    """Return sections in document order, each linked to its parent by relative rank."""
+    lines = markdown_text.split("\n")
+    headings = parse_headings(markdown_text)
+    sections = []
+    open_heading_positions = []
+
+    for position, heading in enumerate(headings):
+        while (
+            open_heading_positions
+            and headings[open_heading_positions[-1]].level >= heading.level
+        ):
+            open_heading_positions.pop()
+
+        parent_index = open_heading_positions[-1] if open_heading_positions else None
+
+        is_last_heading = position + 1 >= len(headings)
+        end_line = len(lines) if is_last_heading else headings[position + 1].line_index
+        content = "\n".join(lines[heading.line_index + 1 : end_line]).strip()
+
+        sections.append(
+            Section(heading=heading, parent_index=parent_index, content=content)
+        )
+        open_heading_positions.append(position)
+
+    return sections
