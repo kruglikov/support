@@ -6,7 +6,24 @@ FENCE_PATTERN = re.compile(r"^\s*(?:```|~~~)")
 TOGGLE_PATTERN = re.compile(r'\{toggle="true"\}')
 PRIORITY_PATTERN = re.compile(r'<span[^>]*color="red"[^>]*>')
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\([^)]*\)")
-MARKUP_PATTERN = re.compile(r'<[^>]+>|\*\*|__|\*|_|\{toggle="[^"]*"\}')
+NON_EMPHASIS_MARKUP_PATTERN = re.compile(r'<[^>]+>|\{toggle="[^"]*"\}')
+# Matches only when the marker pair wraps the *entire* remaining title, so
+# stray/unpaired characters such as identifier underscores (snake_case_name,
+# __init__ method) or a lone asterisk (2 * 3 matrices) are left untouched.
+# Double markers are tried before single markers so "**bold**" isn't parsed
+# as a single "*" pair with "*bold*" left over as its content.
+DOUBLE_EMPHASIS_PATTERN = re.compile(r'^(\*\*|__)(\S(?:.*\S)?)\1$')
+SINGLE_EMPHASIS_PATTERN = re.compile(r'^(\*|_)(\S(?:.*\S)?)\1$')
+
+
+def strip_paired_emphasis(text):
+    double_match = DOUBLE_EMPHASIS_PATTERN.match(text)
+    if double_match:
+        return double_match.group(2)
+    single_match = SINGLE_EMPHASIS_PATTERN.match(text)
+    if single_match:
+        return single_match.group(2)
+    return text
 
 
 @dataclass(frozen=True)
@@ -27,7 +44,8 @@ class Section:
 
 def clean_title(raw_title):
     delinked_title = LINK_PATTERN.sub(r"\1", raw_title)
-    cleaned_title = MARKUP_PATTERN.sub("", delinked_title).strip()
+    stripped_title = NON_EMPHASIS_MARKUP_PATTERN.sub("", delinked_title).strip()
+    cleaned_title = strip_paired_emphasis(stripped_title).strip()
     return cleaned_title
 
 

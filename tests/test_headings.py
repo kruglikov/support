@@ -1,4 +1,4 @@
-from support.headings import build_sections, leading_content, parse_headings
+from support.headings import build_sections, clean_title, leading_content, parse_headings
 
 
 def test_heading_like_lines_inside_code_fences_are_ignored():
@@ -142,6 +142,20 @@ def test_leading_content_is_the_whole_document_when_there_is_no_heading():
     markdown_text = "just some text\nwith no headings at all"
 
     assert leading_content(markdown_text) == markdown_text
+
+
+def test_clean_title_strips_only_genuinely_paired_emphasis_markers():
+    assert clean_title("*emphasis*") == "emphasis"
+    assert clean_title("_emphasis_") == "emphasis"
+    assert clean_title("**bold**") == "bold"
+    assert clean_title("__bold__") == "bold"
+    assert clean_title("snake_case_name") == "snake_case_name"
+    assert clean_title("__init__ method") == "__init__ method"
+    assert clean_title("array_map and $_SERVER") == "array_map and $_SERVER"
+    assert clean_title("2 * 3 matrices") == "2 * 3 matrices"
+    assert clean_title("[Foo](notion://abc)") == "Foo"
+    assert clean_title('DDD {toggle="true"}') == "DDD"
+    assert clean_title('<span color="red">GoF</span>') == "GoF"
 
 
 def test_leading_content_ignores_heading_like_lines_inside_a_fence():
