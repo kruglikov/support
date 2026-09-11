@@ -5,7 +5,8 @@ HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 FENCE_PATTERN = re.compile(r"^\s*(?:```|~~~)")
 TOGGLE_PATTERN = re.compile(r'\{toggle="true"\}')
 PRIORITY_PATTERN = re.compile(r'<span[^>]*color="red"[^>]*>')
-MARKUP_PATTERN = re.compile(r'<[^>]+>|\*\*|__|\{toggle="[^"]*"\}')
+LINK_PATTERN = re.compile(r"\[([^\]]*)\]\([^)]*\)")
+MARKUP_PATTERN = re.compile(r'<[^>]+>|\*\*|__|\*|_|\{toggle="[^"]*"\}')
 
 
 @dataclass(frozen=True)
@@ -25,7 +26,8 @@ class Section:
 
 
 def clean_title(raw_title):
-    cleaned_title = MARKUP_PATTERN.sub("", raw_title).strip()
+    delinked_title = LINK_PATTERN.sub(r"\1", raw_title)
+    cleaned_title = MARKUP_PATTERN.sub("", delinked_title).strip()
     return cleaned_title
 
 
@@ -57,6 +59,21 @@ def parse_headings(markdown_text):
         headings.append(heading)
 
     return headings
+
+
+def leading_content(markdown_text):
+    """Return the text before the first real heading, fence-aware.
+
+    Returns the whole document, stripped, when there is no heading.
+    """
+    headings = parse_headings(markdown_text)
+    if not headings:
+        return markdown_text.strip()
+
+    lines = markdown_text.split("\n")
+    first_heading_line_index = headings[0].line_index
+    content = "\n".join(lines[:first_heading_line_index]).strip()
+    return content
 
 
 def build_sections(markdown_text):

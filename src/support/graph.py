@@ -2,14 +2,14 @@ import json
 import re
 from pathlib import Path
 
-from support.headings import build_sections
+from support.headings import build_sections, leading_content
 from support.manifest import load_manifest
 
 NOTION_LINK_PATTERN = re.compile(r"\]\(notion://([0-9a-fA-F-]+)\)")
 MINIMUM_MENTION_LENGTH = 4
 
 
-def _page_node(record):
+def _page_node(record, page_content):
     node = {
         "id": record.page_id,
         "type": "page",
@@ -19,7 +19,7 @@ def _page_node(record):
         "page_title": record.title,
         "is_toggle": False,
         "is_priority": False,
-        "content_md": "",
+        "content_md": page_content,
     }
     return node
 
@@ -45,20 +45,38 @@ def build_graph_document(mirror_dir, manifest_path):
 
     nodes = []
     edges = []
+    warnings = []
     known_page_ids = set(records)
 
     for page_id, record in records.items():
-        nodes.append(_page_node(record))
+        markdown_path = mirror_dir / record.output_path
+        if markdown_path.exists():
+            markdown_text = markdown_path.read_text(encoding="utf-8")
+        else:
+            markdown_text = ""
+            warnings.append(
+                f"page '{record.title}' ({page_id}): missing mirror file {markdown_path}"
+            )
+
+        page_content = leading_content(markdown_text)
+        page_node = _page_node(record, page_content)
+        nodes.append(page_node)
 
         if record.parent_id in known_page_ids:
             edges.append(
                 {"source": record.parent_id, "target": page_id, "kind": "contains"}
             )
 
-        markdown_path = mirror_dir / record.output_path
-        markdown_text = (
-            markdown_path.read_text(encoding="utf-8") if markdown_path.exists() else ""
-        )
+        for linked_page_id in NOTION_LINK_PATTERN.findall(page_content):
+            if linked_page_id in known_page_ids:
+                edges.append(
+                    {
+                        "source": page_node["id"],
+                        "target": linked_page_id,
+                        "kind": "links_to",
+                    }
+                )
+
         sections = build_sections(markdown_text)
 
         for section_index, section in enumerate(sections):
@@ -85,7 +103,7 @@ def build_graph_document(mirror_dir, manifest_path):
 
     edges.extend(_mention_edges(nodes))
 
-    document = {"nodes": nodes, "edges": edges}
+    document = {"nodes": nodes, "edges": edges, "warnings": warnings}
     return document
 
 
@@ -124,7 +142,7 @@ def _mention_edges(nodes):
                 matched_titles.append(matched_title)
 
         for matched_title in matched_titles:
-            for target_node_id in node_ids_by_lowercase_title[matched_title]:
+            for target_node_id in node_ids_by_lowercase_title.get(matched_title, []):
                 if target_node_id == source_node["id"]:
                     continue
                 mention_edges.append(
@@ -147,5 +165,5 @@ def build_graph(mirror_dir, manifest_path, graph_path):
         json.dumps(document, ensure_ascii=False), encoding="utf-8"
     )
 
-    counts = (len(document["nodes"]), len(document["edges"]))
+    counts = (len(document["nodes"]), len(document["edges"]), document["warnings"])
     return counts

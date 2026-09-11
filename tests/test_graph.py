@@ -160,14 +160,101 @@ def test_duplicate_titles_across_pages_each_get_a_mention_edge(tmp_path):
     assert len(mentions_edges) == 1
 
 
+def test_page_node_gets_the_intro_content_before_the_first_heading(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("php", "PHP", None, "intro text\n\n# Basics\nbody"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    page_node = next(node for node in document["nodes"] if node["id"] == "php")
+    assert page_node["content_md"] == "intro text"
+
+
+def test_page_node_gets_the_whole_body_when_there_are_no_headings(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("php", "PHP", None, "just a body with no headings at all"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    page_node = next(node for node in document["nodes"] if node["id"] == "php")
+    assert page_node["content_md"] == "just a body with no headings at all"
+
+
+def test_a_notion_link_in_leading_content_becomes_a_links_to_edge_from_the_page(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("root", "Software Development", None, ""),
+        ("php", "PHP", "root", "see [Databases](notion://db)\n\n# Basics"),
+        ("db", "Databases", "root", "# Indexes"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    assert {"source": "php", "target": "db", "kind": "links_to"} in document["edges"]
+
+
+def test_a_missing_mirror_file_is_reported_as_a_warning_not_raised(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("php", "PHP", None, "# Basics"),
+    ])
+    (mirror_dir / "php.md").unlink()
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    assert len(document["warnings"]) == 1
+    assert "PHP" in document["warnings"][0]
+    assert str(mirror_dir / "php.md") in document["warnings"][0]
+    page_node = next(node for node in document["nodes"] if node["id"] == "php")
+    assert page_node["content_md"] == ""
+
+
+def test_mention_lookup_never_raises_when_ignorecase_disagrees_with_str_lower(tmp_path, monkeypatch):
+    """Reproduces re.IGNORECASE matching text whose .lower() is not a dict key.
+
+    Real Unicode text can trigger this (re.IGNORECASE and str.lower() do not
+    always agree), but it's simplest to force the exact scenario directly:
+    fake the mention regex so it reports a match whose lowered text was never
+    added to node_ids_by_lowercase_title, and assert this yields no edges
+    instead of raising KeyError.
+    """
+    from support import graph as graph_module
+
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("php", "PHP", None, "# SAGA\nbody mentions SAGA here"),
+    ])
+
+    real_compile = graph_module.re.compile
+
+    class FakeMatch:
+        def group(self, index):
+            return "a title that was never indexed"
+
+    class FakeMentionPattern:
+        def finditer(self, text):
+            yield FakeMatch()
+
+    def fake_compile(pattern, flags=0):
+        if flags == graph_module.re.IGNORECASE:
+            return FakeMentionPattern()
+        return real_compile(pattern, flags)
+
+    monkeypatch.setattr(graph_module.re, "compile", fake_compile)
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    assert [edge for edge in document["edges"] if edge["kind"] == "mentions"] == []
+
+
 def test_build_graph_writes_the_document_to_disk(tmp_path):
     mirror_dir, manifest_path = prepare_mirror(tmp_path, [
         ("php", "PHP", None, "# Basics"),
     ])
     graph_path = tmp_path / "graph" / "graph.json"
 
-    node_count, edge_count = build_graph(mirror_dir, manifest_path, graph_path)
+    node_count, edge_count, warnings = build_graph(mirror_dir, manifest_path, graph_path)
 
     written = json.loads(graph_path.read_text(encoding="utf-8"))
     assert len(written["nodes"]) == node_count == 2
     assert len(written["edges"]) == edge_count
+    assert warnings == []

@@ -1,4 +1,4 @@
-from support.headings import build_sections, parse_headings
+from support.headings import build_sections, leading_content, parse_headings
 
 
 def test_heading_like_lines_inside_code_fences_are_ignored():
@@ -105,3 +105,52 @@ def test_unterminated_fence_swallows_the_remainder():
     headings = parse_headings(markdown_text)
 
     assert [heading.title for heading in headings] == ["Real"]
+
+
+def test_italic_and_underscore_emphasis_are_stripped_from_headings():
+    markdown_text = "\n".join([
+        "# *Foo*",
+        "# _Bar_",
+    ])
+
+    headings = parse_headings(markdown_text)
+
+    assert [heading.title for heading in headings] == ["Foo", "Bar"]
+
+
+def test_markdown_link_syntax_is_reduced_to_its_text_in_headings():
+    markdown_text = "# [Foo](notion://abc-123)"
+
+    headings = parse_headings(markdown_text)
+
+    assert [heading.title for heading in headings] == ["Foo"]
+
+
+def test_leading_content_returns_text_before_the_first_heading():
+    markdown_text = "\n".join([
+        "intro line one",
+        "intro line two",
+        "",
+        "# Basics",
+        "body",
+    ])
+
+    assert leading_content(markdown_text) == "intro line one\nintro line two"
+
+
+def test_leading_content_is_the_whole_document_when_there_is_no_heading():
+    markdown_text = "just some text\nwith no headings at all"
+
+    assert leading_content(markdown_text) == markdown_text
+
+
+def test_leading_content_ignores_heading_like_lines_inside_a_fence():
+    markdown_text = "\n".join([
+        "```python",
+        "# not a heading",
+        "```",
+        "# Real Heading",
+        "body",
+    ])
+
+    assert leading_content(markdown_text) == "```python\n# not a heading\n```"

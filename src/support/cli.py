@@ -8,6 +8,16 @@ from support import config as project_config
 from support.config import ConfigError, load_config
 from support.notion_api import build_gateway
 
+try:
+    from notion_client.errors import APIResponseError
+except Exception:  # pragma: no cover - defensive against client module layout changes
+
+    class APIResponseError(Exception):
+        """Fallback stand-in so the CLI still imports if notion_client changes shape."""
+
+        code = None
+        status = None
+
 
 def is_servable_path(request_path):
     """True only for the viewer and graph files the page needs."""
@@ -19,6 +29,17 @@ def is_servable_path(request_path):
         return True
 
     return normalised_path.startswith("/viewer/") or normalised_path.startswith("/graph/")
+
+
+def root_redirect_target(request_path):
+    """Return "/viewer/index.html" for a bare root request, else None."""
+    path = request_path.split("?", 1)[0].split("#", 1)[0]
+    decoded_path = unquote(path)
+    normalised_path = posixpath.normpath(decoded_path)
+
+    if normalised_path == "/":
+        return "/viewer/index.html"
+    return None
 
 
 def _command_sync(args):
@@ -60,33 +81,62 @@ def _command_status(args):
 def _command_build_graph(args):
     from support.graph import build_graph
 
-    node_count, edge_count = build_graph(
+    node_count, edge_count, warnings = build_graph(
         project_config.MIRROR_DIR,
         project_config.MANIFEST_PATH,
         project_config.GRAPH_PATH,
     )
     print(f"nodes: {node_count}")
     print(f"edges: {edge_count}")
+    for warning in warnings:
+        print(f"warning: {warning}")
     return 0
 
 
-def _command_serve(args):
-    handler = http.server.SimpleHTTPRequestHandler
-    directory = str(project_config.PROJECT_ROOT)
+class RootedHandler(http.server.SimpleHTTPRequestHandler):
+    """Serves only the viewer and graph files, redirecting "/" instead of listing it."""
 
-    class RootedHandler(handler):
-        def __init__(self, *handler_args, **handler_kwargs):
-            super().__init__(*handler_args, directory=directory, **handler_kwargs)
+    def __init__(self, *handler_args, directory=None, **handler_kwargs):
+        directory = directory or str(project_config.PROJECT_ROOT)
+        super().__init__(*handler_args, directory=directory, **handler_kwargs)
 
-        def send_head(self):
-            if not is_servable_path(self.path):
-                self.send_error(404, "File not found")
-                return None
-            return super().send_head()
+    def send_head(self):
+        if not is_servable_path(self.path):
+            self.send_error(404, "File not found")
+            return None
 
-    with socketserver.TCPServer(("127.0.0.1", args.port), RootedHandler) as server:
-        print(f"Viewer: http://127.0.0.1:{args.port}/viewer/index.html")
+        redirect_target = root_redirect_target(self.path)
+        if redirect_target is not None:
+            self.send_response(302)
+            self.send_header("Location", redirect_target)
+            self.end_headers()
+            return None
+
+        return super().send_head()
+
+    def list_directory(self, path):
+        self.send_error(404, "File not found")
+        return None
+
+
+class ReusableTCPServer(socketserver.TCPServer):
+    """A TCPServer that can be restarted without waiting out TIME_WAIT."""
+
+    allow_reuse_address = True
+
+
+def _serve_forever_quietly(server):
+    """Run the server until Ctrl+C, exiting quietly instead of with a traceback."""
+    try:
         server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+
+
+def _command_serve(args):
+    with ReusableTCPServer(("127.0.0.1", args.port), RootedHandler) as server:
+        print(f"Viewer: http://127.0.0.1:{args.port}/viewer/index.html")
+        _serve_forever_quietly(server)
     return 0
 
 
@@ -114,6 +164,19 @@ def main(argv=None):
         return args.handler(args)
     except ConfigError as error:
         print(f"error: {error}")
+        return 1
+    except APIResponseError as error:
+        is_auth_error = getattr(error, "status", None) == 401 or getattr(
+            error, "code", None
+        ) == "unauthorized"
+        if is_auth_error:
+            print(
+                "error: Notion rejected the request as unauthorized. Check that "
+                "NOTION_TOKEN is a valid integration token and that the root page "
+                "has been shared with that integration."
+            )
+        else:
+            print(f"error: Notion API request failed: {error}")
         return 1
 
 
