@@ -35,6 +35,26 @@ def test_fetch_all_blocks_follows_every_cursor():
     assert blocks_children.requested_cursors == [None, "c1", "c2"]
 
 
+def test_fetch_all_blocks_terminates_when_next_cursor_is_null():
+    class FakeBlocksChildrenWithNullCursor:
+        def __init__(self):
+            self.requested_cursors = []
+
+        def list(self, block_id, start_cursor=None, page_size=100):
+            self.requested_cursors.append(start_cursor)
+            if len(self.requested_cursors) > 1:
+                raise AssertionError("Should not request a second time with cursor None")
+            return {"results": [{"id": "b1"}], "has_more": True, "next_cursor": None}
+
+    blocks_children = FakeBlocksChildrenWithNullCursor()
+    gateway = NotionGateway(FakeClient(blocks_children), min_seconds_between_calls=0)
+
+    blocks = gateway.fetch_all_blocks("page-1")
+
+    assert [block["id"] for block in blocks] == ["b1"]
+    assert blocks_children.requested_cursors == [None]
+
+
 def test_walk_page_tree_returns_root_then_descendants_without_duplicates():
     blocks_children = FakeBlocksChildren({
         None: {"results": [], "has_more": False, "next_cursor": None},

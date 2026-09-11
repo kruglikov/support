@@ -57,7 +57,7 @@ class NotionGateway:
             self.last_call_finished_at = time.monotonic()
 
             blocks.extend(response["results"])
-            if not response.get("has_more"):
+            if not response.get("has_more") or response.get("next_cursor") is None:
                 break
             start_cursor = response["next_cursor"]
 
