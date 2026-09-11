@@ -62,6 +62,10 @@ def run_sync(gateway, root_page_id, mirror_dir, raw_dir, manifest_path, force_fu
         slug = page_slug(node.title, node.page_id, taken_slugs)
         taken_slugs.add(slug)
 
+        existing_record = records.get(node.page_id)
+        if existing_record is not None and existing_record.output_path != f"{slug}.md":
+            (mirror_dir / existing_record.output_path).unlink(missing_ok=True)
+
         (mirror_dir / f"{slug}.md").write_text(conversion.markdown, encoding="utf-8")
         (raw_dir / f"{node.page_id}.json").write_text(
             json.dumps(blocks, indent=2, ensure_ascii=False), encoding="utf-8"

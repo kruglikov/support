@@ -104,6 +104,29 @@ def test_run_sync_prunes_pages_that_disappeared_from_notion(tmp_path):
     assert "gone" not in load_manifest(manifest_path)
 
 
+def test_run_sync_removes_the_old_mirror_file_when_a_page_is_renamed(tmp_path):
+    mirror_dir = tmp_path / "mirror"
+    raw_dir = mirror_dir / ".raw"
+    manifest_path = mirror_dir / "manifest.json"
+
+    run_sync(build_gateway(), "root", mirror_dir, raw_dir, manifest_path)
+
+    renamed_nodes = [
+        PageNode(page_id="root", title="Software Development", parent_id=None, last_edited_time="2026-01-01T00:00:00.000Z"),
+        PageNode(page_id="php", title="PHP Renamed", parent_id="root", last_edited_time="2026-01-03T00:00:00.000Z"),
+    ]
+    blocks_by_page_id = {"root": [paragraph("root body")], "php": [paragraph("php body")]}
+    gateway = FakeGateway(renamed_nodes, blocks_by_page_id)
+
+    run_sync(gateway, "root", mirror_dir, raw_dir, manifest_path)
+
+    assert (mirror_dir / "php-renamed.md").exists()
+    assert not (mirror_dir / "php.md").exists()
+
+    records = load_manifest(manifest_path)
+    assert records["php"].output_path == "php-renamed.md"
+
+
 def test_run_status_reports_the_plan_without_writing(tmp_path):
     manifest_path = tmp_path / "manifest.json"
 
