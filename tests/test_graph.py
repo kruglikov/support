@@ -86,6 +86,80 @@ def test_a_section_does_not_mention_itself(tmp_path):
     assert [edge for edge in document["edges"] if edge["kind"] == "mentions"] == []
 
 
+def test_punctuation_titles_are_mentioned(tmp_path):
+    # "C++" (3 chars) is below MINIMUM_MENTION_LENGTH and would never qualify
+    # as a mention target regardless of the boundary bug, so "Visual C++" is
+    # used here: it is long enough to qualify and still ends in punctuation,
+    # exercising the same trailing (?!\w) case; ".NET" exercises the leading
+    # (?<!\w) case.
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("langs", "Languages", None,
+         "# Visual C++\nbody\n# .NET\nbody\n# Intro\nwe love Visual C++ and .NET a lot"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    mentions_edges = [edge for edge in document["edges"] if edge["kind"] == "mentions"]
+    assert {"source": "langs#2", "target": "langs#0", "kind": "mentions"} in mentions_edges
+    assert {"source": "langs#2", "target": "langs#1", "kind": "mentions"} in mentions_edges
+
+
+def test_longest_title_wins_over_a_shorter_prefix(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("patterns", "Patterns", None,
+         "# SAGA\nbody\n# SAGA Pattern\nbody\n# Intro\nwe use the SAGA Pattern here\n"
+         "# Noise\nancient SAGAS are still studied today"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    mentions_edges = [edge for edge in document["edges"] if edge["kind"] == "mentions"]
+    assert {"source": "patterns#2", "target": "patterns#1", "kind": "mentions"} in mentions_edges
+    assert {"source": "patterns#2", "target": "patterns#0", "kind": "mentions"} not in mentions_edges
+    # "SAGAS" embeds "SAGA" as a substring but is followed by a word character
+    # ("s"), so the lookahead must still reject it, exactly as \b did.
+    assert {"source": "patterns#3", "target": "patterns#0", "kind": "mentions"} not in mentions_edges
+    assert {"source": "patterns#3", "target": "patterns#1", "kind": "mentions"} not in mentions_edges
+
+
+def test_mention_matching_is_case_insensitive(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("infra", "Infra", None, "# API Gateway\nbody\n# Intro\nwe use the api GATEWAY here"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    mentions_edges = [edge for edge in document["edges"] if edge["kind"] == "mentions"]
+    assert {"source": "infra#1", "target": "infra#0", "kind": "mentions"} in mentions_edges
+
+
+def test_duplicate_titles_across_pages_each_get_a_mention_edge(tmp_path):
+    mirror_dir, manifest_path = prepare_mirror(tmp_path, [
+        ("db", "Databases", None, "# Transactions\nbody"),
+        ("php", "PHP", None, "# Transactions\nbody"),
+        ("intro", "Intro", None, "# Overview\nTransactions matter a lot"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    mentions_edges = [edge for edge in document["edges"] if edge["kind"] == "mentions"]
+    assert {"source": "intro#0", "target": "db#0", "kind": "mentions"} in mentions_edges
+    assert {"source": "intro#0", "target": "php#0", "kind": "mentions"} in mentions_edges
+    assert len(mentions_edges) == 2
+
+    mirror_dir, manifest_path = prepare_mirror(tmp_path.joinpath("other"), [
+        ("db", "Databases", None, "# Transactions\nbody"),
+        ("php", "PHP", None, "# Transactions\nWe rely on Transactions heavily"),
+    ])
+
+    document = build_graph_document(mirror_dir, manifest_path)
+
+    mentions_edges = [edge for edge in document["edges"] if edge["kind"] == "mentions"]
+    assert {"source": "php#0", "target": "db#0", "kind": "mentions"} in mentions_edges
+    assert {"source": "php#0", "target": "php#0", "kind": "mentions"} not in mentions_edges
+    assert len(mentions_edges) == 1
+
+
 def test_build_graph_writes_the_document_to_disk(tmp_path):
     mirror_dir, manifest_path = prepare_mirror(tmp_path, [
         ("php", "PHP", None, "# Basics"),

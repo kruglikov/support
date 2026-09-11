@@ -107,7 +107,7 @@ def _mention_edges(nodes):
         return []
 
     alternation = "|".join(re.escape(title) for title in qualifying_titles)
-    mention_pattern = re.compile(r"\b(?:" + alternation + r")\b", re.IGNORECASE)
+    mention_pattern = re.compile(r"(?<!\w)(?:" + alternation + r")(?!\w)", re.IGNORECASE)
 
     mention_edges = []
     for source_node in section_nodes:
