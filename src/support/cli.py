@@ -2,6 +2,7 @@ import argparse
 import http.server
 import posixpath
 import socketserver
+from urllib.parse import unquote
 
 from support import config as project_config
 from support.config import ConfigError, load_config
@@ -10,8 +11,9 @@ from support.notion_api import build_gateway
 
 def is_servable_path(request_path):
     """True only for the viewer and graph files the page needs."""
-    path = request_path.split("?", 1)[0]
-    normalised_path = posixpath.normpath(path)
+    path = request_path.split("?", 1)[0].split("#", 1)[0]
+    decoded_path = unquote(path)
+    normalised_path = posixpath.normpath(decoded_path)
 
     if normalised_path in ("/", "/viewer", "/graph"):
         return True
