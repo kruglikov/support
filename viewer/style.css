@@ -1,0 +1,105 @@
+:root {
+  --bg: #14161a;
+  --panel: #1b1e24;
+  --text: #e6e8ec;
+  --muted: #8b93a1;
+  --accent: #e5534b;
+  --line: #2a2f38;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 30%) 1fr;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#tree {
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+#content {
+  overflow-y: auto;
+  padding: 24px 32px;
+}
+
+.row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.row:hover { background: #232832; }
+.row.selected { background: #2d3441; }
+.row.priority { color: var(--accent); font-weight: 600; }
+.row .caret { color: var(--muted); display: inline-block; width: 1em; }
+
+.children { margin-left: 14px; }
+.children[hidden] { display: none; }
+
+.toggle-section {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin: 10px 0;
+  padding: 8px 12px;
+}
+
+.toggle-section > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.related { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+.related h3 { font-size: 13px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+
+.chip {
+  display: inline-block;
+  margin: 0 6px 6px 0;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chip:hover { border-color: var(--accent); }
+
+pre {
+  background: #0f1115;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.hint, .error { color: var(--muted); }
+.error { color: var(--accent); }
+
+#content a { color: #7aa2f7; text-decoration: none; }
+#content a:hover { text-decoration: underline; }
+#content a.xref::after { content: " ›"; color: var(--muted); }
+#content ul, #content ol { margin: 8px 0; padding-left: 22px; }
+#content li { margin: 3px 0; }
+#content em { color: #cfd4de; }
+#content h2, #content h3, #content h4, #content h5, #content h6 {
+  margin: 18px 0 6px;
+  color: var(--text);
+}
