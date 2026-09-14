@@ -193,6 +193,87 @@ function renderRelated(nodeId) {
   return container;
 }
 
+function renderLinks(text) {
+  return text.replace(/\[([^\]\n]*)\]\(([^)\s]+)\)/g, (match, label, target) => {
+    if (target.startsWith("notion://")) {
+      const nodeId = target.slice("notion://".length);
+      return `<a href="#" class="xref" data-node-id="${nodeId}">${label}</a>`;
+    }
+    if (/^https?:\/\//.test(target)) {
+      return `<a href="${target}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+    return match;
+  });
+}
+
+function renderChunk(chunk) {
+  if (/^%%CODEBLOCK\d+%%$/.test(chunk)) {
+    return chunk;
+  }
+
+  const lines = chunk.split("\n");
+  const parts = [];
+  let listItems = [];
+  let listTag = null;
+  let textLines = [];
+
+  const flushList = () => {
+    if (listItems.length) {
+      parts.push(`<${listTag}>${listItems.join("")}</${listTag}>`);
+      listItems = [];
+      listTag = null;
+    }
+  };
+
+  const flushText = () => {
+    if (textLines.length) {
+      parts.push(`<p>${textLines.join("<br>")}</p>`);
+      textLines = [];
+    }
+  };
+
+  for (const line of lines) {
+    const bulletMatch = line.match(/^\s*[-*]\s+(.*)$/);
+    const numberMatch = line.match(/^\s*\d+\.\s+(.*)$/);
+    const headingMatch = line.match(/^(#{1,6})\s+(.*\S)\s*$/);
+
+    if (bulletMatch) {
+      flushText();
+      if (listTag && listTag !== "ul") {
+        flushList();
+      }
+      listTag = "ul";
+      listItems.push(`<li>${bulletMatch[1]}</li>`);
+      continue;
+    }
+
+    if (numberMatch) {
+      flushText();
+      if (listTag && listTag !== "ol") {
+        flushList();
+      }
+      listTag = "ol";
+      listItems.push(`<li>${numberMatch[1]}</li>`);
+      continue;
+    }
+
+    if (headingMatch) {
+      flushText();
+      flushList();
+      const level = Math.min(headingMatch[1].length + 1, 6);
+      parts.push(`<h${level}>${headingMatch[2]}</h${level}>`);
+      continue;
+    }
+
+    flushList();
+    textLines.push(line);
+  }
+
+  flushText();
+  flushList();
+  return parts.join("");
+}
+
 function renderMarkdown(markdownText) {
   const escaped = escapeHtml(markdownText);
 
@@ -207,13 +288,13 @@ function renderMarkdown(markdownText) {
   );
 
   const withInlineCode = withPlaceholders.replace(/`([^`\n]+)`/g, "<code>$1</code>");
-  const withBold = withInlineCode.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
-  const withParagraphs = withBold
-    .split(/\n{2,}/)
-    .map((chunk) => (/^%%CODEBLOCK\d+%%$/.test(chunk) ? chunk : `<p>${chunk.replace(/\n/g, "<br>")}</p>`))
-    .join("");
+  const withLinks = renderLinks(withInlineCode);
+  const withBold = withLinks.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  const withItalic = withBold.replace(/(^|[^*\w])\*([^*\n]+)\*(?![*\w])/g, "$1<em>$2</em>");
 
-  const withCodeBlocks = withParagraphs.replace(
+  const withBlocks = withItalic.split(/\n{2,}/).map(renderChunk).join("");
+
+  const withCodeBlocks = withBlocks.replace(
     /%%CODEBLOCK(\d+)%%/g,
     (match, index) => codeBlocks[Number(index)]
   );
@@ -229,5 +310,17 @@ function escapeHtml(text) {
 function cssEscape(value) {
   return value.replace(/["\\]/g, "\\$&");
 }
+
+document.getElementById("content").addEventListener("click", (event) => {
+  const crossReference = event.target.closest("a.xref");
+  if (!crossReference) {
+    return;
+  }
+  event.preventDefault();
+  const nodeId = crossReference.dataset.nodeId;
+  if (state.nodesById.has(nodeId)) {
+    select(nodeId);
+  }
+});
 
 load();

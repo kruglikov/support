@@ -92,3 +92,14 @@ pre {
 
 .hint, .error { color: var(--muted); }
 .error { color: var(--accent); }
+
+#content a { color: #7aa2f7; text-decoration: none; }
+#content a:hover { text-decoration: underline; }
+#content a.xref::after { content: " ›"; color: var(--muted); }
+#content ul, #content ol { margin: 8px 0; padding-left: 22px; }
+#content li { margin: 3px 0; }
+#content em { color: #cfd4de; }
+#content h2, #content h3, #content h4, #content h5, #content h6 {
+  margin: 18px 0 6px;
+  color: var(--text);
+}
