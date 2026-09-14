@@ -158,6 +158,17 @@ def test_clean_title_strips_only_genuinely_paired_emphasis_markers():
     assert clean_title('<span color="red">GoF</span>') == "GoF"
 
 
+def test_clean_title_strips_emphasis_that_does_not_wrap_the_whole_title():
+    """Real headings from the Notion corpus, which the whole-title-only rule missed."""
+    assert clean_title("Types of p**olymorphism**") == "Types of polymorphism"
+    assert clean_title("**Principle of least surprise** (POLS)") == (
+        "Principle of least surprise (POLS)"
+    )
+    assert clean_title("**Principle of Least Knowledge(PLK) & **Law of Demeter(LoD)") == (
+        "Principle of Least Knowledge(PLK) & Law of Demeter(LoD)"
+    )
+
+
 def test_leading_content_ignores_heading_like_lines_inside_a_fence():
     markdown_text = "\n".join([
         "```python",

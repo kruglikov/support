@@ -7,23 +7,27 @@ TOGGLE_PATTERN = re.compile(r'\{toggle="true"\}')
 PRIORITY_PATTERN = re.compile(r'<span[^>]*color="red"[^>]*>')
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 NON_EMPHASIS_MARKUP_PATTERN = re.compile(r'<[^>]+>|\{toggle="[^"]*"\}')
-# Matches only when the marker pair wraps the *entire* remaining title, so
-# stray/unpaired characters such as identifier underscores (snake_case_name,
-# __init__ method) or a lone asterisk (2 * 3 matrices) are left untouched.
-# Double markers are tried before single markers so "**bold**" isn't parsed
-# as a single "*" pair with "*bold*" left over as its content.
-DOUBLE_EMPHASIS_PATTERN = re.compile(r'^(\*\*|__)(\S(?:.*\S)?)\1$')
-SINGLE_EMPHASIS_PATTERN = re.compile(r'^(\*|_)(\S(?:.*\S)?)\1$')
+# Asterisks are never part of an identifier, so paired asterisk emphasis is
+# stripped anywhere in a title, and any unpaired "**" left over by Notion's
+# own uneven bold runs is removed too. Underscores DO appear in identifiers
+# (snake_case_name, __init__, $_SERVER), so underscore emphasis is stripped
+# only when the pair wraps the entire title.
+DOUBLE_ASTERISK_EMPHASIS_PATTERN = re.compile(r"\*\*(\S(?:.*?\S)?)\*\*")
+LEFTOVER_DOUBLE_ASTERISK_PATTERN = re.compile(r"\*\*")
+SINGLE_ASTERISK_EMPHASIS_PATTERN = re.compile(r"\*(\S(?:.*?\S)?)\*")
+UNDERSCORE_EMPHASIS_PATTERN = re.compile(r"^(__|_)(\S(?:.*\S)?)\1$")
 
 
 def strip_paired_emphasis(text):
-    double_match = DOUBLE_EMPHASIS_PATTERN.match(text)
-    if double_match:
-        return double_match.group(2)
-    single_match = SINGLE_EMPHASIS_PATTERN.match(text)
-    if single_match:
-        return single_match.group(2)
-    return text
+    without_double_pairs = DOUBLE_ASTERISK_EMPHASIS_PATTERN.sub(r"\1", text)
+    without_stray_doubles = LEFTOVER_DOUBLE_ASTERISK_PATTERN.sub("", without_double_pairs)
+    without_asterisks = SINGLE_ASTERISK_EMPHASIS_PATTERN.sub(r"\1", without_stray_doubles)
+
+    underscore_match = UNDERSCORE_EMPHASIS_PATTERN.match(without_asterisks)
+    if underscore_match:
+        return underscore_match.group(2)
+
+    return without_asterisks
 
 
 @dataclass(frozen=True)
