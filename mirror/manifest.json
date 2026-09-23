@@ -1,0 +1,18 @@
+{
+  "3649c92c96f5805b9c4ff011b3d65977": {
+    "content_hash": "7f4bff21f3dcf2a0e6870eab97794c7136584091534b03f6407f75297cb58c58",
+    "last_edited_time": "2026-08-26T14:42:09.249Z",
+    "output_path": "oop-principles-patterns.md",
+    "page_id": "3649c92c96f5805b9c4ff011b3d65977",
+    "parent_id": "9bbf3c16e12041f3996bae0eb316cd78",
+    "title": "OOP\\Principles\\Patterns"
+  },
+  "9bbf3c16e12041f3996bae0eb316cd78": {
+    "content_hash": "6595da811cb9d78ce7582ef996bbd94287e7eca9d89fc2665a7e7743f73d669e",
+    "last_edited_time": "2026-08-26T14:42:09.249Z",
+    "output_path": "software-development.md",
+    "page_id": "9bbf3c16e12041f3996bae0eb316cd78",
+    "parent_id": null,
+    "title": "Software Development"
+  }
+}
