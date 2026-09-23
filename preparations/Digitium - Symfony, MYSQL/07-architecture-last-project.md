@@ -10,6 +10,7 @@ The architecture below is the **as-is** architecture: a modular Symfony monolith
 - **The 2-minute answer** — section 2, plus the diagram in section 4 and the three extraction decisions in section 6.
 - **The deep dive** — sections 7 to 13, whichever the interviewer pulls on.
 - **The "what would you change" answer** — section 15, and then section 16.
+- **The decision most likely to be challenged** — section 7, one database per tenant. Have the costs in section 7 ready before the interviewer names them.
 
 Never open with the technology list. Open with what the platform does for its tenants, then name the two or three forces that shaped the architecture, then draw the picture. A technology list without a driver behind it sounds memorised.
 
@@ -24,7 +25,7 @@ Name these before drawing anything — every later decision refers back to one o
 1. **AI calls are slow and unreliable.** A single large-language-model call takes seconds to minutes, fails intermittently, and is rate-limited per provider. Nothing that calls a language model can sit inside an HTTP request.
 2. **Work arrives in large batches, not single items.** A tenant does not generate one product description; a tenant generates descriptions for 100,000 products across 5 locales in one action. The unit of work is a run over a catalogue, not a row.
 3. **Search is a different workload from CRUD.** Search is read-heavy, latency-sensitive, memory-hungry and needs to scale horizontally on its own; the administrative CRUD of products, users and settings does not.
-4. **Every row belongs to a tenant.** Isolation between tenants must hold in the database, in the caches, in the search indexes and in the queues, and a noisy tenant must not starve the others.
+4. **Tenants must be isolated, and some of them contractually.** Isolation has to hold in the database, in the caches, in the search indexes and in the queues; a noisy tenant must not starve the others; and a large tenant must be restorable, tunable and deletable on its own. This is the force that produced the database-per-tenant model described in section 7.
 5. **The existing code was an MVP under time pressure.** Whatever was designed had to be introduced gradually into a running production system with paying tenants, never as a rewrite.
 
 ## 4. The architecture as it runs
@@ -50,8 +51,8 @@ Name these before drawing anything — every later decision refers back to one o
                v          v            v
          +---------+  +--------+   +------------------+
          |  MySQL  |  |RabbitMQ|   |  Search Service  |  standalone, scaled separately
-         |  (RDS)  |  +--------+   |  Meilisearch /   |
-         +---------+      |        |  Typesense +     |
+         | one DB  |  +--------+   |  Meilisearch /   |
+         |per tent.|      |        |  Typesense +     |
                ^          |        |  vector index    |
                |          v        +------------------+
          +---------+  +-----------------------+            ^
@@ -67,7 +68,7 @@ Name these before drawing anything — every later decision refers back to one o
                           +-------------+
 ```
 
-Everything inside the Symfony application box is one deployable unit with one codebase, one composer dependency set and one deployment pipeline. The two boxes outside it — the Search Service and the AI Generation Service — are separately deployable processes with their own scaling, because each one has a different scaling profile from the rest of the application.
+The MySQL box is not one database: each tenant has its own database, large tenants on their own RDS instance and small tenants sharing one instance, with a separate control-plane database holding the tenant registry, the users, the plans and the usage events. Section 7 describes that model. Everything inside the Symfony application box is one deployable unit with one codebase, one composer dependency set and one deployment pipeline. The two boxes outside it — the Search Service and the AI Generation Service — are separately deployable processes with their own scaling, because each one has a different scaling profile from the rest of the application.
 
 ## 5. The modules inside the Symfony application
 
@@ -91,7 +92,7 @@ Why the modules stayed in one deployable unit rather than becoming services: eve
 
 **The AI Generation Service.** Extracted because its failure modes and its dependencies are different from everything else: it holds the provider credentials, it implements the per-provider rate limits, retries and fallbacks, and it is the only component allowed to talk to an external language-model provider. It consumes jobs from RabbitMQ and publishes results back. Behind one internal interface it supports several providers (OpenAI, OpenRouter, DeepSeek); when one provider is unavailable, the service falls back to the next, and a workflow step never learns which provider served it.
 
-**What was deliberately *not* extracted.** Identity, Catalogue, Localization, Newsletter, Media and Billing stayed inside the Symfony application, because those modules share transactions and a single database, and splitting them would buy nothing but network calls and eventual-consistency bugs.
+**What was deliberately *not* extracted.** Identity, Catalogue, Localization, Newsletter, Media and Billing stayed inside the Symfony application, because those modules share transactions inside one tenant's database, and splitting them would buy nothing but network calls and eventual-consistency bugs.
 
 ## 7. Data and multi-tenancy
 
@@ -170,7 +171,7 @@ The search side is a CQRS read model. MySQL is the write model; Meilisearch/Type
 
 - The indexing pipeline consumes `content.updated`, `product.created`, `translation.completed` and `media.uploaded` from RabbitMQ, reads the affected rows in batches with hand-written SQL, and writes documents into the index.
 - Lexical search runs against Meilisearch/Typesense; semantic and multimodal search runs against embeddings produced by the AI Generation Service and stored in the vector index.
-- Indexes are tenant-aware: either one index per large tenant, or a shared index with a mandatory tenant filter for the long tail of small tenants.
+- Indexes follow the same boundary as the databases: one index per tenant, which matches the database-per-tenant model of section 7 and makes a per-tenant reindex or deletion a single operation.
 - Redis caches the hot queries, keyed by tenant plus the normalised query, with a short time to live; an index update invalidates the affected keys by tag.
 - The honest trade-off to state out loud: search results are eventually consistent, usually within seconds. For a catalogue search that is acceptable; anything that must be immediately consistent (a permission check, a billing quota) is read from MySQL, never from the index.
 
@@ -186,16 +187,16 @@ Three layers, each with an explicit invalidation story, because a cache without 
 
 - Containers built with Docker, run on AWS EC2 instances; Podman and LXC on the development machines. Images are layered so that the base image, the system packages and `composer.json` plus `composer.lock` come before the application source, and a code change rebuilds only the last layer — the reasoning written out in the closing section of `/home/viktar/Projects/Support/preparations/Digitium - Symfony, MYSQL/06-confluence-hints-Digiteum-Symfony-MySQL.md`.
 - Separate deployable units, each scaled on its own: the web/API processes, the queue worker processes (several pools, one per queue class, so a slow AI queue cannot starve the indexing queue), the Search Service, and the AI Generation Service.
-- MySQL on RDS with a read replica for the reporting and export queries; S3 for media and artefacts; CloudWatch for logs and metrics; Grafana for the dashboards.
+- MySQL on RDS in two tiers: a dedicated instance per large tenant, and one shared instance holding the databases of the small tenants, plus the control-plane instance that holds the tenant registry, the users, the plans and the usage events. Read replicas serve the reporting and export queries. S3 for media and artefacts; CloudWatch for logs and metrics; Grafana for the dashboards.
 - Structured logging in JSON with a correlation identifier that is created at the API edge and carried through the RabbitMQ message headers into every worker, so one user action can be followed across the Symfony application, the AI Generation Service and the Search Service.
-- Alerts on the things that actually signal damage: queue depth and consumer lag per queue, dead-letter queue arrival rate, AI provider error and fallback rate, p95 search latency, MySQL slow-query count, worker restart rate.
+- Alerts on the things that actually signal damage: queue depth and consumer lag per queue, dead-letter queue arrival rate, AI provider error and fallback rate, p95 search latency, MySQL slow-query count, worker restart rate, open connections per RDS instance, and any tenant whose schema version is behind the expected one.
 
 ## 13. The quality gates that hold the modernisation together
 
 This is the part the Digiteum request description in `/home/viktar/Projects/Support/preparations/Digitium - Symfony, MYSQL/00-request-description.md` cares about most, so it deserves its own beat in the conversation.
 
 - **Test first for every bug fix.** The failing test that reproduces the bug is written before the fix, which is the only way to know the fix works and that the bug stays fixed.
-- **PHPStan at level max with no suppressions**, including custom rules written when a class of bug came back more than once — for example a rule that forbids a repository method that builds a query without the tenant predicate.
+- **PHPStan at level max with no suppressions**, including custom rules written when a class of bug came back more than once — for example a rule that rejects a repository for tenant-owned data that is constructed with the control-plane entity manager instead of the tenant entity manager, which is the one mistake in the database-per-tenant model that would write a tenant's rows into the wrong database.
 - **Rector and PHP CS Fixer** to modernise the MVP code mechanically and reviewably, in small pull requests, never as a rewrite.
 - **The strangler approach to the legacy parts:** put the old behaviour under characterisation tests first, extract the behaviour behind an interface, re-implement it, switch the call sites behind a feature flag, then delete the old code.
 
@@ -226,6 +227,7 @@ An interviewer trusts an architecture more when its author names what the archit
 | Bypassing Doctrine ORM on the read paths | Batch reads stopped exhausting memory | Two ways of reading data in one codebase, so the rule for which to use has to be written down |
 | Provider abstraction with fallback in the AI Generation Service | Survives one provider being down or rate-limited | The abstraction is the lowest common denominator of the providers; provider-specific features need an escape hatch |
 | Storing workflow state in MySQL rather than in the worker | Suspend, resume, rerun and partial failure all work | Every step costs writes to the database, so steps are batched and state transitions are kept small |
+| One database per tenant, dedicated instances for the large tenants | Physical isolation, per-tenant restore and deletion, per-tenant tuning, a noisy tenant moved without a code change | Every migration runs N times and must be backward compatible, cross-tenant reporting has to be built from events, and connection count becomes an operational limit |
 
 ## 16. Likely follow-up questions, and the short answer for each
 
@@ -238,8 +240,9 @@ Drawn from the topics the same interviewer asked in both round 2 recordings, lis
 5. **"Is it good to have many indexes?"** — No. Every index costs storage, slows every write on that table because the index must be maintained, consumes buffer-pool memory and gives the optimiser more plans to get wrong. Indexes are added against measured queries and removed when nothing uses them.
 6. **"Why denormalise?"** — For a read pattern that would otherwise join across large tables on every request: per-tenant counters for quotas, a denormalised product list projection for the grid. The cost is that the duplicate has to be kept correct, which is why each denormalised value is written by the same event that changes the source.
 7. **"What is an exchange in RabbitMQ, and which types exist?"** — An exchange is the routing component a publisher publishes to; queues bind to the exchange with a binding key, and the exchange type decides how a message's routing key is matched: direct (exact match), topic (pattern with `*` and `#`), fanout (every bound queue), headers (matching on header values).
-8. **"How do you secure the endpoints?"** — Authentication with a signed token carrying the tenant and the roles, authorisation with Symfony voters on the resource, plus the tenant predicate enforced in the data layer so an authorisation mistake still cannot cross tenants. The webhook endpoints from the PIM provider are public, so they are verified by an HMAC-SHA256 signature over the raw body with a shared secret, with a timestamp check against replay.
-9. **"What did you monitor?"** — Queue depth and consumer lag per queue, dead-letter arrivals, AI provider error and fallback rates, p95 search latency, MySQL slow-query counts, memory and restart rates per worker pool, all in CloudWatch with Grafana dashboards, and alerts only on the signals that need a human.
+8. **"How do you secure the endpoints?"** — Authentication with a signed token carrying the tenant and the roles, authorisation with Symfony voters on the resource, and underneath both the database connection itself as the tenant boundary: the request is resolved to one tenant's database before any repository runs, so an authorisation mistake is a bug inside one tenant rather than a cross-tenant leak. The webhook endpoints from the PIM provider are public, so they are verified by an HMAC-SHA256 signature over the raw body with a shared secret, with a timestamp check against replay.
+9. **"What did you monitor?"** — Queue depth and consumer lag per queue, dead-letter arrivals, AI provider error and fallback rates, p95 search latency, MySQL slow-query counts, open connections per RDS instance, tenants whose schema version is behind, and memory and restart rates per worker pool, all in CloudWatch with Grafana dashboards, and alerts only on the signals that need a human.
+10. **"Why a database per tenant and not a `tenant_id` column?"** — Because the isolation requirement was contractual for the large tenants, and because per-tenant restore, per-tenant deletion and per-tenant performance tuning are single operations in this model and awkward extractions from a shared schema. The price is paid on migrations, which run per tenant from an orchestrated, resumable job and must be backward compatible, and on cross-tenant reporting, which is built from usage events aggregated into the control-plane database rather than from a query spanning tenants. The tier is a property of the tenant registry row, so promoting a growing tenant from the shared instance to a dedicated one is a data move plus one row, not a code change.
 
 ## 17. Where the architecture would go next
 
