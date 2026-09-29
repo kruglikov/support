@@ -1,0 +1,290 @@
+{
+ "pdf_page": 3,
+ "printed_page": 2,
+ "blocks": [
+  {
+   "id": 1,
+   "type": "keep-english",
+   "bbox": [
+    72.0,
+    72.59,
+    425.92,
+    85.87
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      72.59,
+      425.92,
+      85.87
+     ],
+     "origin": [
+      72.0,
+      83.28
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "keep-english",
+   "bbox": [
+    72.0,
+    100.43,
+    527.55,
+    145.39
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      100.43,
+      527.55,
+      113.71
+     ],
+     "origin": [
+      72.0,
+      111.12
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      116.27,
+      496.01,
+      129.55
+     ],
+     "origin": [
+      72.0,
+      126.96
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      132.11,
+      342.25,
+      145.39
+     ],
+     "origin": [
+      72.0,
+      142.8
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "keep-english",
+   "bbox": [
+    72.0,
+    540.59,
+    375.76,
+    567.79
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      540.59,
+      144.67,
+      553.87
+     ],
+     "origin": [
+      72.0,
+      551.28
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPS-ItalicMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      554.51,
+      375.76,
+      567.79
+     ],
+     "origin": [
+      72.0,
+      565.2
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "keep-english",
+   "bbox": [
+    72.0,
+    582.11,
+    193.33,
+    636.67
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      582.11,
+      140.67,
+      595.39
+     ],
+     "origin": [
+      72.0,
+      592.8
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      595.79,
+      193.33,
+      609.07
+     ],
+     "origin": [
+      72.0,
+      606.48
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      609.71,
+      158.34,
+      622.99
+     ],
+     "origin": [
+      72.0,
+      620.4
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      623.39,
+      160.65,
+      636.67
+     ],
+     "origin": [
+      72.0,
+      634.08
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "keep-english",
+   "bbox": [
+    72.0,
+    650.99,
+    516.55,
+    705.79
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      650.99,
+      270.29,
+      664.27
+     ],
+     "origin": [
+      72.0,
+      661.68
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      664.91,
+      172.32,
+      678.19
+     ],
+     "origin": [
+      72.0,
+      675.6
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      678.59,
+      516.55,
+      691.87
+     ],
+     "origin": [
+      72.0,
+      689.28
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      692.51,
+      325.95,
+      705.79
+     ],
+     "origin": [
+      72.0,
+      703.2
+     ],
+     "size": 12.0,
+     "font": "TimesNewRomanPSMT",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,134 @@
+{
+ "pdf_page": 1,
+ "printed_page": null,
+ "blocks": [
+  {
+   "id": 1,
+   "type": "heading",
+   "bbox": [
+    524.79,
+    23.89,
+    590.89,
+    41.42
+   ],
+   "lines": [
+    {
+     "bbox": [
+      524.79,
+      23.89,
+      590.89,
+      41.42
+     ],
+     "origin": [
+      524.79,
+      37.77
+     ],
+     "size": 16.0,
+     "font": "Arapey-Regular",
+     "color": 16777215,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "heading",
+   "bbox": [
+    160.82,
+    56.24,
+    451.15,
+    176.35
+   ],
+   "lines": [
+    {
+     "bbox": [
+      160.82,
+      56.24,
+      451.15,
+      114.1
+     ],
+     "origin": [
+      160.82,
+      102.45
+     ],
+     "size": 44.99,
+     "font": "Pierson-Regular",
+     "color": 16777215,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      249.74,
+      118.49,
+      362.23,
+      176.35
+     ],
+     "origin": [
+      249.74,
+      164.7
+     ],
+     "size": 44.99,
+     "font": "Pierson-Regular",
+     "color": 16777215,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "heading",
+   "bbox": [
+    175.52,
+    621.24,
+    436.46,
+    661.21
+   ],
+   "lines": [
+    {
+     "bbox": [
+      175.52,
+      621.24,
+      436.46,
+      661.21
+     ],
+     "origin": [
+      175.52,
+      653.16
+     ],
+     "size": 31.08,
+     "font": "Pierson-Regular",
+     "color": 16777215,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "prose",
+   "bbox": [
+    287.39,
+    770.91,
+    324.61,
+    782.79
+   ],
+   "lines": [
+    {
+     "bbox": [
+      287.39,
+      770.91,
+      324.61,
+      782.79
+     ],
+     "origin": [
+      287.39,
+      779.58
+     ],
+     "size": 10.0,
+     "font": "Alice-Regular",
+     "color": 16777215,
+     "is_bold": false
+    }
+   ]
+  }
+ ]
+}

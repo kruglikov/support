@@ -1,0 +1,230 @@
+{
+ "pdf_page": 95,
+ "printed_page": 94,
+ "blocks": [
+  {
+   "id": 1,
+   "type": "reference",
+   "bbox": [
+    72.0,
+    72.13,
+    137.61,
+    89.13
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      72.13,
+      137.61,
+      89.13
+     ],
+     "origin": [
+      72.0,
+      85.2
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "kjv-verse",
+   "bbox": [
+    72.0,
+    89.17,
+    518.86,
+    123.21
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      89.17,
+      518.86,
+      106.17
+     ],
+     "origin": [
+      72.0,
+      102.24
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      106.21,
+      503.74,
+      123.21
+     ],
+     "origin": [
+      72.0,
+      119.28
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "kjv-verse",
+   "bbox": [
+    72.0,
+    152.77,
+    537.91,
+    220.89
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      152.77,
+      480.15,
+      169.77
+     ],
+     "origin": [
+      72.0,
+      165.84
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      169.81,
+      537.91,
+      186.81
+     ],
+     "origin": [
+      72.0,
+      182.88
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      186.85,
+      485.98,
+      203.85
+     ],
+     "origin": [
+      72.0,
+      199.92
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      203.89,
+      415.29,
+      220.89
+     ],
+     "origin": [
+      72.0,
+      216.96
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "prose",
+   "bbox": [
+    72.0,
+    301.57,
+    525.33,
+    369.93
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      301.57,
+      499.17,
+      318.57
+     ],
+     "origin": [
+      72.0,
+      314.64
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      318.61,
+      408.76,
+      335.61
+     ],
+     "origin": [
+      72.0,
+      331.68
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      335.89,
+      525.33,
+      352.89
+     ],
+     "origin": [
+      72.0,
+      348.96
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    },
+    {
+     "bbox": [
+      72.0,
+      352.93,
+      387.0,
+      369.93
+     ],
+     "origin": [
+      72.0,
+      366.0
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    }
+   ]
+  }
+ ]
+}

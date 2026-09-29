@@ -1,0 +1,182 @@
+{
+ "pdf_page": 56,
+ "printed_page": 55,
+ "blocks": [
+  {
+   "id": 1,
+   "type": "heading",
+   "bbox": [
+    149.38,
+    72.26,
+    466.66,
+    96.58
+   ],
+   "lines": [
+    {
+     "bbox": [
+      149.38,
+      72.26,
+      466.66,
+      96.58
+     ],
+     "origin": [
+      149.38,
+      90.96
+     ],
+     "size": 19.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "reference",
+   "bbox": [
+    72.0,
+    113.65,
+    170.44,
+    130.65
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      113.65,
+      170.44,
+      130.65
+     ],
+     "origin": [
+      72.0,
+      126.72
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": true
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "kjv-verse",
+   "bbox": [
+    72.0,
+    130.69,
+    535.89,
+    182.01
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      130.69,
+      507.51,
+      147.69
+     ],
+     "origin": [
+      72.0,
+      143.76
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      147.73,
+      535.89,
+      164.73
+     ],
+     "origin": [
+      72.0,
+      160.8
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      165.01,
+      349.88,
+      182.01
+     ],
+     "origin": [
+      72.0,
+      178.08
+     ],
+     "size": 13.92,
+     "font": "Aptos-Bold",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "kjv-verse",
+   "bbox": [
+    72.0,
+    211.33,
+    538.68,
+    262.41
+   ],
+   "lines": [
+    {
+     "bbox": [
+      72.0,
+      211.33,
+      538.68,
+      228.33
+     ],
+     "origin": [
+      72.0,
+      224.4
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      228.37,
+      493.86,
+      245.37
+     ],
+     "origin": [
+      72.0,
+      241.44
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    },
+    {
+     "bbox": [
+      72.0,
+      245.41,
+      276.93,
+      262.41
+     ],
+     "origin": [
+      72.0,
+      258.48
+     ],
+     "size": 13.92,
+     "font": "Aptos",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  }
+ ]
+}

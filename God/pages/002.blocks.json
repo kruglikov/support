@@ -1,0 +1,62 @@
+{
+ "pdf_page": 2,
+ "printed_page": null,
+ "blocks": [
+  {
+   "id": 1,
+   "type": "heading",
+   "bbox": [
+    194.31,
+    273.12,
+    435.69,
+    308.41
+   ],
+   "lines": [
+    {
+     "bbox": [
+      194.31,
+      273.12,
+      435.69,
+      308.41
+     ],
+     "origin": [
+      194.31,
+      299.59
+     ],
+     "size": 35.65,
+     "font": "BaskOldFace",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "heading",
+   "bbox": [
+    258.18,
+    611.46,
+    361.84,
+    627.54
+   ],
+   "lines": [
+    {
+     "bbox": [
+      258.18,
+      611.46,
+      361.84,
+      627.54
+     ],
+     "origin": [
+      258.18,
+      623.52
+     ],
+     "size": 16.08,
+     "font": "BaskOldFace",
+     "color": 0,
+     "is_bold": false
+    }
+   ]
+  }
+ ]
+}
