@@ -164,7 +164,7 @@
   },
   {
    "id": 5,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     306.61,
@@ -224,7 +224,7 @@
   },
   {
    "id": 6,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     387.01,
@@ -284,7 +284,7 @@
   },
   {
    "id": 7,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     467.65,
@@ -328,7 +328,7 @@
   },
   {
    "id": 8,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     531.01,

@@ -176,7 +176,7 @@
   },
   {
    "id": 6,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     305.17,
@@ -220,7 +220,7 @@
   },
   {
    "id": 7,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     368.77,
@@ -264,7 +264,7 @@
   },
   {
    "id": 8,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     432.85,
@@ -292,7 +292,7 @@
   },
   {
    "id": 9,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     479.17,
@@ -320,7 +320,7 @@
   },
   {
    "id": 10,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     525.73,
@@ -380,7 +380,7 @@
   },
   {
    "id": 11,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     606.13,
@@ -424,7 +424,7 @@
   },
   {
    "id": 12,
-   "type": "prose",
+   "type": "kjv-verse",
    "bbox": [
     72.0,
     668.53,
